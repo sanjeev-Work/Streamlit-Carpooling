@@ -146,60 +146,59 @@ def generate_carpool_assignments(input_xlsx: str, output_xlsx: str):
     # Map each passenger name to their driver for each segment
     assigned_driver = {p.name: {'hotel': '', 'support': '', 'airport': ''} for p in all_people}
     # Record assignments for Hotel and Airport segments
+    active_drivers = set() # collect drivers with 1+ passenger for coloring
     for cars in hotel_assignments.values():
         for driver, pax_list in cars.items():
+            if pax_list:  # only consider drivers with passengers
+                active_drivers.add(driver.name)
             for pax in pax_list:
                 assigned_driver[pax.name]['hotel'] = driver.name
     for cars in airport_assignments.values():
         for driver, pax_list in cars.items():
+            if pax_list:  # only consider drivers with passengers
+                active_drivers.add(driver.name)
             for pax in pax_list:
                 assigned_driver[pax.name]['airport'] = driver.name
     # Record assignments for Support segment
     for cars in support_assignments.values():
         for driver, pax_list in cars.items():
+            if pax_list:  # only consider drivers with passengers
+                active_drivers.add(driver.name)
             for pax in pax_list:
                 assigned_driver[pax.name]['support'] = driver.name
     # Populate the sheet rows
-    driver_names = set()  # to collect all drivers for coloring
     for person in sorted(all_people, key=lambda p: p.name):
         name = person.name
-        # Rental Car: list driver's name if person has or is given a car
-        if person.has_rental_car or person.given_rental_car:
-            rental_car = person.name
-            driver_names.add(person.name)
-        else:
-            rental_car = ''
-        # Determine Ride to Hotel entry
-        if person.personal.get('Hotel', False):
+        rental_car = person.name if (person.has_rental_car or person.given_rental_car) else ''
+        # Ride to Hotel
+        if person.personal.get("Hotel", False):
             ride_hotel = 'Personal'
-        elif person.has_rental_car or person.given_rental_car:
+        elif rental_car != '':
             ride_hotel = person.name
         else:
             ride_hotel = assigned_driver[name]['hotel']
-        # Determine Ride to Support entry
-        if person.has_rental_car or person.given_rental_car:
+        # Ride to Support
+        if rental_car != '':
             ride_support = person.name
         else:
-            # No personal flag for support, just use assignment (or blank if none)
             ride_support = assigned_driver[name]['support']
-        # Determine Ride to Airport entry
-        if person.personal.get('Airport', False):
+        # Ride to Airport
+        if person.personal.get("Airport", False):
             ride_airport = 'Personal'
-        elif person.has_rental_car or person.given_rental_car:
+        elif rental_car != '':
             ride_airport = person.name
         else:
             ride_airport = assigned_driver[name]['airport']
-        # Rental Car Given flag: "YES" if auto-assigned (given) a rental without originally having one
+        # Rental car given
         rental_given = 'YES' if (person.given_rental_car and not person.has_rental_car) else ''
-        # Append the row
         ws.append([name, rental_car, '', ride_hotel, ride_support, ride_airport, rental_given])
     # Apply color fill: each driver gets a unique color, fill any cell containing that driver's name
     color_map = {}
-    for drv in driver_names:
+    for drv in active_drivers:
         # generate a pastel-ish color for visibility
-        r = random.randint(100, 255)
-        g = random.randint(100, 255)
-        b = random.randint(100, 255)
+        r = random.randint(100, 220)
+        g = random.randint(100, 220)
+        b = random.randint(100, 220)
         hex_color = f"{r:02X}{g:02X}{b:02X}"
         color_map[drv] = PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
     # Fill cells in Rental Car and Ride columns if value matches a driver name

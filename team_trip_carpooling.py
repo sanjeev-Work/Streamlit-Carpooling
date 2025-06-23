@@ -83,6 +83,15 @@ def write_carpool_excel(input_xlsx: str, output_xlsx: str):
     hotel_assignments  = simple_assign_passengers(ride_hotel)
     airport_assignments = simple_assign_passengers(ride_airport)
 
+    # identify active drivers with at least 1 passenger
+    active_drivers = set()
+    for cars in hotel_assignments.values():
+        for driver, pax_list in cars.items():
+            if pax_list: active_drivers.add(driver)
+    for cars in airport_assignments.values():
+        for driver, pax_list in cars.items():
+            if pax_list: active_drivers.add(driver)
+
     assigned = {p.name: {} for p in all_people}
     for key, cars in hotel_assignments.items():
         for driver, riders in cars.items():
@@ -107,10 +116,7 @@ def write_carpool_excel(input_xlsx: str, output_xlsx: str):
         name = person.name
         rental_flag = 'YES' if person.given_rental_car and not person.has_rental_car else ''
         # Determine Rental Car column
-        rental_car = ''
-        if person.has_rental_car or person.given_rental_car:
-            rental_car = person.name
-            driver_names.add(person.name)
+        rental_car = person.name if person.given_rental_car or person.has_rental_car else ''
 
         # Ride to Hotel column: personal overrides any rental
         if person.personal['Hotel']:
@@ -135,13 +141,12 @@ def write_carpool_excel(input_xlsx: str, output_xlsx: str):
 
     # color sheet
     name_to_fill = {}
-    for drv in driver_names:
-        r = random.randint(100, 255)
-        g = random.randint(100, 255)
-        b = random.randint(100, 255)
+    for drv in active_drivers:
+        r = random.randint(100, 220)
+        g = random.randint(100, 220)
+        b = random.randint(100, 220)
         hex_rgb = f"{r:02X}{g:02X}{b:02X}"
-        fill = PatternFill(start_color=hex_rgb, end_color=hex_rgb, fill_type="solid")
-        name_to_fill[drv] = fill
+        name_to_fill[drv.name] = PatternFill(start_color=hex_rgb, end_color=hex_rgb, fill_type="solid")
 
     max_row = ws1.max_row
     for row in range(2, max_row + 1):
