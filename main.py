@@ -65,13 +65,12 @@ def process_carpool_assignment(uploaded_file, ride_type: str, hotel_window_min: 
     
     try:
         # 3. Call the appropriate backend function based on ride_type
-        if ride_type == "cabpool":
-            # cabpool.write_cab_excel will call Parser.process_excel (now patched) and use Parser._cluster_by_time (patched)
-            cabpool.write_cab_excel(input_path, output_path)
-        elif ride_type == "team trip":
-            team_trip_carpooling.write_carpool_excel(input_path, output_path)
-        elif ride_type == "go-live":
+        if ride_type == "Go-Live":
             go_live_carpooling.generate_carpool_assignments(input_path, output_path)
+        elif ride_type == "Team Trip":
+            team_trip_carpooling.write_carpool_excel(input_path, output_path)
+        elif ride_type == "Cabpool":
+            cabpool.write_cab_excel(input_path, output_path)
         else:
             raise ValueError(f"Unknown ride type: {ride_type}")
     finally:

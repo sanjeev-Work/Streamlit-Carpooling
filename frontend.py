@@ -21,7 +21,7 @@ if uploaded_file:
         st.stop()
     
     # 2. UI elements for configuration
-    ride_type = st.selectbox("Ride type", ["cabpool", "team trip", "go-live"], index=0)
+    ride_type = st.selectbox("Ride type", ["Go-Live", "Team Trip", "Cabpool"], index=0)
     
     # Two sliders for grouping windows (in minutes)
     col1, col2 = st.columns(2)
