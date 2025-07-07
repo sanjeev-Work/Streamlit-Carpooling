@@ -127,7 +127,11 @@ class Parser:
         Reads an Excel file and processes Person data.
         returns: all people in input file, people marked personal for hotel, people marked personal for airport
         """
-        df_main = pd.read_excel(input_file, sheet_name="Car pool", dtype=str, skiprows=1)
+        # only keep rows with non-empty "Name" column, drop empty rows
+        df_main = pd.read_excel(input_file, sheet_name="Car pool", dtype=str, skiprows=1).dropna(
+            how='all').loc[
+                lambda d: d["Name"].notna() & (d["Name"].str.strip() != "")].reset_index(drop=True)
+        
         df_etr = pd.read_excel(input_file, sheet_name="Insert ETR Info Here", usecols=["Name", "Rental Car"], dtype=str)
 
         df = df_main.merge(df_etr, on="Name", how="left", suffixes=("", "_etr"))
